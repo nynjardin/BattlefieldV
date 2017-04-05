@@ -12,6 +12,10 @@ local be1 = 255
 local be2 = 255
 local be3 = 255
 
+local capZone1 = 0
+local capZone2 = 0
+local capZone3 = 0
+
 local ready = false
 
 local playerBlue = false
@@ -137,15 +141,27 @@ local chekPointBF = {
 	{350.880279541016,-587.370056152344,43.3150177001953}
 }
 
+local stratPoint = {
+	{-75.1452, -818.625, 325.176},
+	{323.839,-209.899,54.086},
+	{-1113.139,-309.137,37.661}
+}
+
 local chekPointBF2 = {
     {-3099.834,1267.301,20.220},
 	{-3095.425,1295.823,20.202},
 	{-3089.397,1315.935,20.203}
 }
 
+local place0 = stratPoint[1]
 local place1 = chekPointBF[1]
 local place2 = chekPointBF[2]
 local place3 = chekPointBF[3]
+local place4 = stratPoint[1]
+local placeR = stratPoint[3]
+local placeB = stratPoint[2]
+
+local spawnPlace = 1
 
 local usSkinList = {"BF4UsAssault", "BF4UsEngineer", "BF4UsSniper", "BF4UsSupport"}
 blueSkin = usSkinList[1]
@@ -185,7 +201,7 @@ Citizen.CreateThread(function()
     while true do
         Wait(0)
         if NetworkIsSessionStarted() then
-        	--NetworkSetFriendlyFireOption(true)
+        	NetworkSetFriendlyFireOption(true)
 			--SetCanAttackFriendly(GetPlayerPed(-1), true, true)
             TriggerServerEvent('bf:firstJoin')
             return
@@ -229,10 +245,11 @@ function ShowSkin(skin)
 		Citizen.Wait(0)
 	end
 	TriggerEvent('chatMessage', '', { 0, 0, 0 }, '^1 Model chargé '..model)
-	classShow = CreatePed(4,  model, -75.1452, -818.625, 326.176,  180.0,  false,  true)
+	classShow = CreatePed(4,  model, place4[1], place4[2], place4[3],  180.0,  false,  true)
 	--classShow = CreatePed(4,  model, -72.733, -823.289, 326.175,  180.0,  false,  true)
 	TriggerEvent('chatMessage', '', { 0, 0, 0 }, '^1 Ped Créé')
-	Citizen.InvokeNative(0xB736A491E64A32CF,Citizen.PointerValueIntInitialized(classShow)) -- ENTITY::SET_ENTITY_AS_NO_LONGER_NEEDED
+	FreezeEntityPosition(classShow, true)
+	--Citizen.InvokeNative(0xB736A491E64A32CF,Citizen.PointerValueIntInitialized(classShow)) -- ENTITY::SET_ENTITY_AS_NO_LONGER_NEEDED
 	local weaHash2 = GetHashKey(secondWeaponList[1])
 	GiveWeaponToPed(classShow, weaHash2, 1000, 0, false) -- mitralleuse
 	SetCurrentPedWeapon(classShow,  weaHash2,  true)
@@ -285,36 +302,6 @@ Citizen.CreateThread(function()
 	end
 end)
 
---Vehicle spawner (have to be remade)
---[[Citizen.CreateThread(function()
-	while true do
-		Wait(0)
-		if ready then
-			Wait(5000)
-			num = GetRandomIntInRange(1,  #armyVehList)
-			car = armyVehList[num]
-			modelVeh = GetHashKey(car)
-			RequestModel(modelVeh)
-
-        	while not HasModelLoaded(modelVeh) do
-            	Citizen.Wait(0)
-	        end
-	        local plyCoords = GetEntityCoords(GetPlayerPed(-1), true)
-	        local spawnPosX = plyCoords.x + math.random(-20, 20)
-	        local spawnPosY = plyCoords.y + math.random(-20, 20)
-	        local spawnPosZ = plyCoords.z + math.random(1, 20)
-	        armyVehicle = CreateVehicle(modelVeh ,spawnPosX, spawnPosY, spawnPosZ, 228.2736, true, false)
-
-	        SetVehicleOnGroundProperly(armyVehicle)
-	        SetVehicleHasBeenOwnedByPlayer(armyVehicle,true)
-	        local id = NetworkGetNetworkIdFromEntity(armyVehicle)
-	        SetNetworkIdCanMigrate(id, true)
-	        Wait(55000)
-		end
-	end
-end)]]
-
-
 RegisterNetEvent('bf:placePlayer')
 AddEventHandler('bf:placePlayer', function()
  	if playerBlue then
@@ -326,7 +313,6 @@ AddEventHandler('bf:placePlayer', function()
     end
 
 end)
-
 
 RegisterNetEvent('bf:blueTeam')
 AddEventHandler('bf:blueTeam', function()
@@ -364,7 +350,73 @@ Citizen.CreateThread(function()
 	end
 end)
 
+function selectStartPoint()
+	Wait(100)
+    SetModelAsNoLongerNeeded(model)
+	Citizen.InvokeNative(0x9614299DCB53E54B, Citizen.PointerValueIntInitialized(classShow))
+    ShowSkin(num)
+    RemoveAllPedWeapons(classShow, true)
+	local weaHash2 = GetHashKey(secondWeaponList[num])
+	GiveWeaponToPed(classShow, weaHash2, 1000, 0, false) -- mitralleuse
+	SetCurrentPedWeapon(classShow,  weaHash2,  true)
+	return
+end
 
+function setStartPoint()
+	if spawnPlace == 1 then
+    	if GetPlayerTeam(PlayerId()) == 2 then
+    		if capZone1 == 2 then
+        		place4 = place1
+        		selectStartPoint()
+        		placeR = place1
+        	end
+        end
+        if GetPlayerTeam(PlayerId()) == 1 then
+		    if capZone1 == 1 then
+        		place4 = place1
+        		selectStartPoint()
+        		placeB = place1
+		    end
+		end
+	end
+	if spawnPlace == 2 then
+		if GetPlayerTeam(PlayerId()) == 2 then
+    		if capZone2 == 2 then
+        		place4 = place2
+        		selectStartPoint()
+        		placeR = place2
+        	end
+        end
+        if GetPlayerTeam(PlayerId()) == 1 then
+		    if capZone2 == 1 then
+        		place4 = place2
+        		selectStartPoint()
+        		placeB = place2
+        	end
+	    end
+	end
+	if spawnPlace == 3 then
+		if GetPlayerTeam(PlayerId()) == 2 then
+			if capZone3 == 2 then
+        		place4 = place3
+        		selectStartPoint()
+        		placeR = place3
+        	end
+	    end
+	    if GetPlayerTeam(PlayerId()) == 1 then
+	    	if capZone3 == 1 then
+        		place4 = place3
+        		selectStartPoint()
+        		placeB = place3
+        	end
+	    end
+	end
+
+	if spawnPlace == 4 then
+		place4 = place0
+		selectStartPoint()
+	end
+end
 
 RegisterNetEvent('bf:selectClass')
 AddEventHandler('bf:selectClass', function()
@@ -373,6 +425,7 @@ AddEventHandler('bf:selectClass', function()
     Wait(500)
     ShowSkin(num)
     SetEntityHealth(GetPlayerPed(-1), 200)
+    
     while true do
         Citizen.Wait(0)
         if not ready then
@@ -420,16 +473,23 @@ AddEventHandler('bf:selectClass', function()
 		    	GiveWeaponToPed(classShow, weaHash2, 1000, 0, false) -- mitralleuse
 		    	SetCurrentPedWeapon(classShow,  weaHash2,  true)
             end
+
+
+            --Changing point
+            
+            if IsControlJustPressed(1,187) and spawnPlace > 0 then --down
+            	spawnPlace = spawnPlace - 1
+            	setStartPoint()
+            end
+            if IsControlJustPressed(1,188) and spawnPlace < 4 then --up
+            	spawnPlace = spawnPlace + 1
+            	setStartPoint()
+            end
+
+            --Changing team
             if IsControlJustPressed(1,206) or IsControlJustPressed(1,205) then --RB or LB
             	TriggerServerEvent('bf:changeTeam')
-            	Wait(100)
-                SetModelAsNoLongerNeeded(model)
-            	Citizen.InvokeNative(0x9614299DCB53E54B, Citizen.PointerValueIntInitialized(classShow))
-                ShowSkin(num)
-                RemoveAllPedWeapons(classShow, true)
-		    	local weaHash2 = GetHashKey(secondWeaponList[num])
-		    	GiveWeaponToPed(classShow, weaHash2, 1000, 0, false) -- mitralleuse
-		    	SetCurrentPedWeapon(classShow,  weaHash2,  true)
+            	selectStartPoint()
             end
             --Tant que rien n'est validé, afficher la voiture
             if IsControlJustPressed(1,201) then -- 201 correspond a "Valider" soit "Enter" ou "A" sur une manette
@@ -440,14 +500,16 @@ AddEventHandler('bf:selectClass', function()
                 Wait(500)
                 Citizen.InvokeNative(0x9614299DCB53E54B, Citizen.PointerValueIntInitialized(classShow))
                 SetEntityVisible(GetPlayerPed(-1),true) --le rend visible
+                local randomplace = GetRandomIntInRange(-3,  3)
                 if playerBlue then
 			 		FreezeEntityPosition(GetPlayerPed(-1),false) --déparalyse le joueur
-			        SetEntityCoords(GetPlayerPed(-1), 323.839,-209.899,54.086, 1, 0, 0, 1)-- TP le joueur a cet entroit
+			        SetEntityCoords(GetPlayerPed(-1), placeB[1]+randomplace,placeB[2]+randomplace,placeB[3], 1, 0, 0, 1)-- TP le joueur a cet entroit
 			    elseif playerRed then
 			    	FreezeEntityPosition(GetPlayerPed(-1),false) --déparalyse le joueur
-			        SetEntityCoords(GetPlayerPed(-1), -1113.139,-309.137,37.661, 1, 0, 0, 1)-- TP le joueur a cet entroit
+			        SetEntityCoords(GetPlayerPed(-1), placeR[1]+randomplace,placeR[2]+randomplace,placeR[3], 1, 0, 0, 1)-- TP le joueur a cet entroit
 			    end
-				
+			    SetEntityMaxHealth(GetPlayerPed(-1), 200)
+				SetEntityHealth(GetPlayerPed(-1), 200)
 			    Wait(500)
 			    RemoveAllPedWeapons(GetPlayerPed(-1), true)
 			    local grenade1 = GetHashKey(grenades[1])
@@ -495,7 +557,7 @@ AddEventHandler('bf:selectClass', function()
             else
                 FreezeEntityPosition(GetPlayerPed(-1), true) --paralyse le joueur
                 SetEntityVisible(GetPlayerPed(-1), false) --le rend invisible
-                SetEntityCoords(GetPlayerPed(-1), -75.1452, -818.625, 325.176, 1, 0, 0, 1)-- TP le joueur sur le toit de la grande tour
+                SetEntityCoords(GetPlayerPed(-1), place4[1], place4[2], place4[3], 1, 0, 0, 1)-- TP le joueur sur le toit de la grande tour
             end
         else return end
     end
@@ -600,24 +662,99 @@ AddEventHandler('bf:placeCap', function(placecap1, placecap2, placecap3, red1, g
 
 end)
 
---Function to only kill player from other team
+--send an info to the server that the player actually shoot
+Citizen.CreateThread( function()
+    while true do
+        Wait(0)
+        if IsPedShooting(GetPlayerPed(-1)) then
+        	local shotPos = GetEntityCoords(GetPlayerPed(-1),  true)
+            TriggerServerEvent('bf:gunshotInProgressPos', shotPos.x, shotPos.y, shotPos.z)
+            Wait(3000)
+        end
+    end
+end)
+
+--show a blip where the player have shooted
+RegisterNetEvent('bf:gunshotPlace')
+AddEventHandler('bf:gunshotPlace', function(gx, gy, gz)
+    local transG = 255
+    local thiefBlip = AddBlipForCoord(gx, gy, gz)
+    SetBlipSprite(thiefBlip,  373)
+    SetBlipColour(thiefBlip,  1)
+    SetBlipAlpha(thiefBlip,  transG)
+    SetBlipScale(thiefBlip,  0.5)
+    SetBlipAsShortRange(thiefBlip,  1)
+    Wait(500)
+    while transG ~= 0 do
+        Wait(10)
+        transG = transG - 1
+        SetBlipAlpha(thiefBlip,  transG)
+    end
+    if transG == 0 then
+        return end
+end)
+
+
+local function DrawPlayerName(n, r, g, b)
+    SetTextFont( 0 )
+    SetTextProportional(0)
+    SetTextScale( 0.3000, 0.3000 )
+    N_0x4e096588b13ffeca(0)
+    SetTextColour( r, g, b, 255 )
+    SetTextDropShadow(0, 0, 0, 0,255)
+    SetTextEdge(5, 0, 0, 0, 255)
+    SetTextDropShadow()
+    SetTextOutline()
+    SetTextEntry( "STRING" )
+    AddTextComponentString( n )
+    DrawText( 0.5, 0.5 )
+end
+
+
 Citizen.CreateThread(function()
 	while true do
 		Citizen.Wait(0)
 	    for i = 0, 31 do
+			local gamerTagId = Citizen.InvokeNative(0xBFEFE3321A3F5015, GetPlayerPed(i), GetPlayerName(i), false, false, "", 0 ) --tostring(GetPlayerName(GetPlayerPed(i)))
 	    	if GetPlayerTeam(PlayerId()) == 1 then
 	    		if GetPlayerTeam(i) == 1 then
 					SetPedAsEnemy(GetPlayerPed(i),  false)
+					if IsEntityVisible(GetPlayerPed(i)) then
+						Citizen.InvokeNative(0x63BB75ABEDC1F6A0, gamerTagId, 0, true) --Active gamerTagId
+				    	Citizen.InvokeNative(0x613ED644950626AE, gamerTagId, 0, 1)
+				    end
+				    if IsPlayerFreeAimingAtEntity(PlayerId(),  GetPlayerPed(i)) or IsPlayerFreeAimingAtEntity(PlayerId(), GetVehiclePedIsIn(GetPlayerPed(i),  false) ) then
+				    	local plyLive = tostring( GetEntityHealth(GetPlayerPed(i)) )
+				    	DrawPlayerName(GetPlayerName(i).." Live: "..plyLive, 0, 0, 255) 
+				    end
+					--SetPedRelationshipGroupHash(GetPlayerPed(i), GetHashKey("PLAYER"))
 				end
 				if GetPlayerTeam(i) == 2 then
 					SetPedAsEnemy(GetPlayerPed(i),  true)
+					if IsPlayerFreeAimingAtEntity(PlayerId(),  GetPlayerPed(i)) or IsPlayerFreeAimingAtEntity(PlayerId(), GetVehiclePedIsIn(GetPlayerPed(i),  false) ) then
+				    	DrawPlayerName(GetPlayerName(i), 0, 0, 255)
+					end
+					--SetPedRelationshipGroupHash(GetPlayerPed(i), GetHashKey("HATES_PLAYER"))
 				end
 			elseif GetPlayerTeam(PlayerId()) == 2 then
 	    		if GetPlayerTeam(i) == 2 then
 					SetPedAsEnemy(GetPlayerPed(i),  false)
+					if IsEntityVisible(GetPlayerPed(i)) then
+						Citizen.InvokeNative(0x63BB75ABEDC1F6A0, gamerTagId, 0, true) --Active gamerTagId
+				    	Citizen.InvokeNative(0x613ED644950626AE, gamerTagId, 0, 1)
+				    end
+				    if IsPlayerFreeAimingAtEntity(PlayerId(),  GetPlayerPed(i)) or IsPlayerFreeAimingAtEntity(PlayerId(), GetVehiclePedIsIn(GetPlayerPed(i),  false) ) then
+				    	local plyLive = tostring( GetEntityHealth(GetPlayerPed(i)) )
+				    	DrawPlayerName(GetPlayerName(i).." Live: "..plyLive, 0, 0, 255) 
+				    end
+					--SetPedRelationshipGroupHash(GetPlayerPed(i), GetHashKey("PLAYER"))
 				end
 				if GetPlayerTeam(i) == 1 then
 					SetPedAsEnemy(GetPlayerPed(i),  true)
+					if IsPlayerFreeAimingAtEntity(PlayerId(),  GetPlayerPed(i)) or IsPlayerFreeAimingAtEntity(PlayerId(), GetVehiclePedIsIn(GetPlayerPed(i),  false) ) then
+				    	DrawPlayerName(GetPlayerName(i), 255, 0, 0)
+					end
+					--SetPedRelationshipGroupHash(GetPlayerPed(i), GetHashKey("HATES_PLAYER"))
 				end
 			end
 		end
@@ -631,58 +768,67 @@ Citizen.CreateThread(function()
 		Wait(0)
 		if re1 == 255 and be1 == 0 then
 			SetBlipColour(capBlip1, 1)
+			capZone1 = 2
 			--blipColor1 = 1
 		elseif re1 ~= 255 and be1 ~= 255 then
 			SetBlipColour(capBlip1, 0)
+			capZone1 = 0
 			--blipColor1 = 0
 		elseif be1 == 255 and re1 == 0 then
 			SetBlipColour(capBlip1, 3)
+			capZone1 = 1
 			--blipColor1 = 3
 		end
 		if re2 == 255 and be2 == 0 then
 			SetBlipColour(capBlip2, 1)
+			capZone2 = 2
 			--blipColor2 = 1
 		elseif re2 ~= 255 and be2 ~= 255 then
 			SetBlipColour(capBlip2, 0)
+			capZone2 = 0
 			--blipColor2 = 0
 		elseif be2 == 255 and re2 == 0 then
 			SetBlipColour(capBlip2, 3)
+			capZone2 = 1
 			--blipColor2 = 3
 		end
 		if re3 == 255 and be3 == 0 then
 			SetBlipColour(capBlip3, 1)
+			capZone3 = 2
 			--blipColor3 = 1
 		elseif re3 ~= 255 and be3 ~= 255 then
 			SetBlipColour(capBlip3, 0)
+			capZone3 = 0
 			--blipColor3 = 0
 		elseif be3 == 255 and re3 == 0 then
 			SetBlipColour(capBlip3, 3)
+			capZone3 = 1
 			--blipColor3 = 3
 		end
 	end
 end)
 
+
 Citizen.CreateThread(function()
 	while true do
 		Citizen.Wait(0)
-		--Draw on top of player to see there team when player aim other player
+		--Draw the name of the player at the center of the screen
 	    for i = 0, 31 do
-	    	local mPlyCoords = GetEntityCoords(GetPlayerPed(i), true)
-	    	if IsEntityVisible(GetPlayerPed(i)) then 
-	    		if GetEntityPlayerIsFreeAimingAt(PlayerId(),  GetPlayerPed(i)) then
+	    	if IsEntityVisible(GetPlayerPed(i)) then
+	    		local gamerTagId = Citizen.InvokeNative(0xBFEFE3321A3F5015, GetPlayerPed(i), GetPlayerName(i), false, false, "", 0 ) --tostring(GetPlayerName(GetPlayerPed(i)))
+	    		if IsPlayerFreeAimingAtEntity(PlayerId(),  GetPlayerPed(i)) or IsPlayerFreeAimingAtEntity(PlayerId(), GetVehiclePedIsIn(GetPlayerPed(i),  false) ) then
+--[[	    			if GetPlayerTeam(i) ~= GetPlayerTeam(-1) then
+	    				SetCanAttackFriendly(GetPlayerPed(-1), true, false)
+	    			elseif GetPlayerTeam(i) == GetPlayerTeam(-1) then
+	    				SetCanAttackFriendly(GetPlayerPed(-1), false, true)
+	    			end]]
 			    	if GetPlayerTeam(i) == 1 then
-			    		if IsPedSittingInAnyVehicle(GetPlayerPed(i),  true) then
-			    			DrawMarker(0, mPlyCoords.x, mPlyCoords.y, mPlyCoords.z+3.3001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0, 0, 200, 155, 0, 0, 2, 0, 0, 0, 0)
-			    		elseif not IsPedSittingInAnyVehicle(GetPlayerPed(i), true) then
-			    			DrawMarker(0, mPlyCoords.x, mPlyCoords.y, mPlyCoords.z+1.3001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0, 0, 200, 155, 0, 0, 2, 0, 0, 0, 0)
-			    		end
+			    		
 			    	elseif GetPlayerTeam(i) == 2 then
-			    		if IsPedSittingInAnyVehicle(GetPlayerPed(i),  true) then
-			    			DrawMarker(0, mPlyCoords.x, mPlyCoords.y, mPlyCoords.z+3.3001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 200, 0, 0, 155, 0, 0, 2, 0, 0, 0, 0)
-			    		elseif not IsPedSittingInAnyVehicle(GetPlayerPed(i), true) then
-			    			DrawMarker(0, mPlyCoords.x, mPlyCoords.y, mPlyCoords.z+1.3001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 200, 0, 0, 155, 0, 0, 2, 0, 0, 0, 0)
-			    		end
+			    		DrawPlayerName(GetPlayerName(i), 255, 0, 0)
 			    	end
+			    else
+			    	Citizen.InvokeNative(0x63BB75ABEDC1F6A0, gamerTagId, 0, false) --Unactive gamerTagId
 			    end
 		    end
 	    end
@@ -729,19 +875,21 @@ Citizen.CreateThread(function()
 		--Draw marker on zone to capture
 		if placed then
 			local lPlyCoords = GetEntityCoords(GetPlayerPed(-1), true)
-			if GetDistanceBetweenCoords(lPlyCoords.x, lPlyCoords.y, lPlyCoords.z,  place1[1],  place1[2],  place1[3],  true) < 10.0 then
-				Wait(100)
-				TriggerServerEvent('bf:place1Cap')
-			end
-			if GetDistanceBetweenCoords(lPlyCoords.x, lPlyCoords.y, lPlyCoords.z,  place2[1],  place2[2],  place2[3],  true) < 10.0 then
-				Wait(100)
-				TriggerServerEvent('bf:place2Cap')
-			end
-			if GetDistanceBetweenCoords(lPlyCoords.x, lPlyCoords.y, lPlyCoords.z,  place3[1],  place3[2],  place3[3],  true) < 10.0 then
-				Wait(100)
-				TriggerServerEvent('bf:place3Cap')
-			end
-        end
+			if IsEntityVisible(GetPlayerPed(-1)) then
+				if GetDistanceBetweenCoords(lPlyCoords.x, lPlyCoords.y, lPlyCoords.z,  place1[1],  place1[2],  place1[3],  true) < 10.0 then
+					Wait(100)
+					TriggerServerEvent('bf:place1Cap')
+				end
+				if GetDistanceBetweenCoords(lPlyCoords.x, lPlyCoords.y, lPlyCoords.z,  place2[1],  place2[2],  place2[3],  true) < 10.0 then
+					Wait(100)
+					TriggerServerEvent('bf:place2Cap')
+				end
+				if GetDistanceBetweenCoords(lPlyCoords.x, lPlyCoords.y, lPlyCoords.z,  place3[1],  place3[2],  place3[3],  true) < 10.0 then
+					Wait(100)
+					TriggerServerEvent('bf:place3Cap')
+				end
+	        end
+	    end
         --Work in progress -> TP in car
         if IsPedGettingIntoAVehicle(GetPlayerPed(-1)) or IsPedTryingToEnterALockedVehicle(GetPlayerPed(-1)) then
 			local enterVeh = GetVehiclePedIsTryingToEnter(GetPlayerPed(1))

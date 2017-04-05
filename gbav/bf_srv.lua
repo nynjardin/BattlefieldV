@@ -318,10 +318,10 @@ end)
 AddEventHandler('playerDropped', function()
 	if blueTeam[source] then
 		blueTeam[source] = nil
-		blueLive = blueLive - 5 
+		blueLive = blueLive - 10 
 	elseif redTeam[source] then
 		redTeam[source] = nil
-		redLive = redLive - 5 
+		redLive = redLive - 10 
 	end
 	TriggerClientEvent('bf:majScore', -1, redLive, blueLive)
 end)
@@ -335,4 +335,9 @@ AddEventHandler('playerConnecting', function(name, setReason)
 		setReason('This server is full (past 24 players).')
 		CancelEvent()
 	end
+end)
+
+RegisterServerEvent('bf:gunshotInProgressPos')
+AddEventHandler('bf:gunshotInProgressPos', function(gx, gy, gz)
+	TriggerClientEvent('bf:gunshotPlace', -1, gx, gy, gz)
 end)
